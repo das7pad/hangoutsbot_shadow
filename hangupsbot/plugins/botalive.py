@@ -74,7 +74,7 @@ def _periodic_watermark_update(bot, watermarkUpdater, target):
 
     last_run = datetime.datetime.now().timestamp()
 
-    while True:
+    while bot.config.exists(["botalive", target]):
         timestamp = datetime.datetime.now().timestamp()
         yield from asyncio.sleep(max(5, last_run - timestamp + bot.config.get_by_path(["botalive", target])))
 
