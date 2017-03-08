@@ -16,13 +16,6 @@ def _initialise(bot):
         bot: hangupsbot instance
     """
     config_botalive = bot.get_config_option("botalive") or {}
-    if not config_botalive:
-        return
-
-    if not bot.memory.exists(["conv_data"]):
-        # should not come to this, but create it once as we need to store data for each conv in it
-        bot.memory.set_by_path(["conv_data"], {})
-        bot.memory.save()
 
     # backwards compatibility
     if isinstance(config_botalive, list):
@@ -39,6 +32,14 @@ def _initialise(bot):
         return
 
     watermark_updater = WatermarkUpdater(bot)
+    if "store_timestamps" in config_botalive:
+        if config_botalive["store_timestamps"]:
+            if not bot.memory.exists(["conv_data"]):
+                # should not come to this,
+                # but create it as we need to store data for each conv in it
+                bot.memory.set_by_path(["conv_data"], {})
+                bot.memory.save()
+            WatermarkUpdater.conv_data = bot.memory["conv_data"]
 
     if "admins" in config_botalive:
         if config_botalive["admins"] < 60:
@@ -77,14 +78,9 @@ def _log_message(bot, event, command):
         command: commands run instance, not used
     """
     conv_id = str(event.conv_id)
-    if not bot.memory.exists(["conv_data", conv_id]):
-        bot.memory.set_by_path(["conv_data", conv_id], {})
-        bot.memory.save()
-    bot.memory.set_by_path(
-        ["conv_data", conv_id, "botalive"],
-        datetime.now().timestamp()
-        )
-    # not worth a dump to disk, skip bot.memory.save()
+    if conv_id not in WatermarkUpdater.conv_data:
+        WatermarkUpdater.conv_data[conv_id] = {}
+    WatermarkUpdater.conv_data[conv_id]["botalive"] = datetime.now().timestamp()
 
 @asyncio.coroutine
 def _periodic_watermark_update(bot, watermark_updater, target):
@@ -120,11 +116,11 @@ def _periodic_watermark_update(bot, watermark_updater, target):
             for conv_id, conv_data in bot.conversations.get().items():
                 if conv_data["type"] != "GROUP":
                     continue
-                if not bot.memory.exists(["conv_data", conv_id, "botalive"]):
+                if conv_id not in WatermarkUpdater.conv_data:
                     continue
-                if last_run < bot.memory.get_by_path(
-                        ["conv_data", conv_id, "botalive"]
-                    ):
+                if "botalive" not in WatermarkUpdater.conv_data[conv_id]:
+                    continue
+                if last_run < WatermarkUpdater.conv_data[conv_id]["botalive"]:
                     watermark_updater.add(conv_id)
 
         last_run = datetime.now().timestamp()
@@ -142,6 +138,8 @@ class WatermarkUpdater:
     to prevent the processor from being consumed entirely and also to not act
         too much as a bot, we sleep 5-10sec after each watermark update
     """
+
+    conv_data = {}
 
     def __init__(self, bot):
         self.bot = bot
