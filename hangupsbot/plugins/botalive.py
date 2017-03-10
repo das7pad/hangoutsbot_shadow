@@ -32,14 +32,15 @@ def _initialise(bot):
         return
 
     watermark_updater = WatermarkUpdater(bot)
-    if "store_timestamps" in config_botalive:
-        if config_botalive["store_timestamps"]:
-            if not bot.memory.exists(["conv_data"]):
-                # should not come to this,
-                # but create it as we need to store data for each conv in it
-                bot.memory.set_by_path(["conv_data"], {})
-                bot.memory.save()
-            WatermarkUpdater.conv_data = bot.memory["conv_data"]
+    if "store_timestamps" not in config_botalive:
+        bot.config.set_by_path(["botalive", "store_timestamps"], False)
+        bot.config.save()
+
+    if not bot.memory.exists(["conv_data"]):
+        # should not come to this,
+        # but create it as we might need to store data for each conv in it
+        bot.memory.set_by_path(["conv_data"], {})
+        bot.memory.save()
 
     if "admins" in config_botalive:
         if config_botalive["admins"] < 60:
@@ -137,9 +138,13 @@ class WatermarkUpdater:
     if a hangups exception is raised, log the exception and output to console
     to prevent the processor from being consumed entirely and also to not act
         too much as a bot, we sleep 5-10sec after each watermark update
+
+    Args:
+        bot: hangupsbot instance
     """
 
-    conv_data = {}
+    _conv_data = {}
+    bot = None
 
     def __init__(self, bot):
         self.bot = bot
@@ -148,6 +153,18 @@ class WatermarkUpdater:
         self.queue = set()
         self.failed = dict() # track errors
         self.failed_permanent = set() # track conv_ids that failed 5 times
+
+    @property
+    def conv_data(self):
+        """get ram and memory.json source together
+
+        Returns:
+            dict, conv_data of memory.json or of WatermarkUpdater._conv_data
+        """
+        if self.bot.config["botalive"]["store_timestamps"]:
+            return self.bot.memory["conv_data"]
+        else:
+            return self._conv_data
 
     def add(self, conv_id):
         """insert a conv_id to the queue if the id is not blacklisted
