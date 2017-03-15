@@ -183,6 +183,7 @@ def start_asyncio_task(coroutine_function, *args, **kwargs):
 
         tracking.register_asyncio_task(task)
 
+        return task
     else:
         raise RuntimeError("coroutine function must be supplied")
 
