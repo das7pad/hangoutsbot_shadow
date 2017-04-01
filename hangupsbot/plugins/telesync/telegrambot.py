@@ -684,11 +684,18 @@ class TelegramBot(telepot.aio.Bot):
                 disable_web_page_preview=True
                 )
         except telepot.exception.TelegramError:
-            yield from self.sendMessage(
-                tg_chat_id,
-                html_module.escape(html),
-                parse_mode='HTML',
-                disable_web_page_preview=True
+            try:
+                yield from self.sendMessage(
+                    tg_chat_id,
+                    html_module.escape(html),
+                    parse_mode='HTML',
+                    disable_web_page_preview=True
+                    )
+            except telepot.exception.TelegramError:
+                yield from self.sendMessage(
+                    tg_chat_id,
+                    html
+                    )
                 )
 
     @asyncio.coroutine
