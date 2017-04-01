@@ -1278,7 +1278,7 @@ class TelegramBot(telepot.aio.Bot):
         Returns:
             boolean, True if user is Admin, otherwise False
         """
-        if not msg.user.user_id in self.config['admins']:
+        if not msg.user.usr_id in self.config['admins']:
             if not self.config['be_quiet']:
                 yield from self.sendMessage(
                     msg.chat_id,
@@ -1469,8 +1469,8 @@ class TelegramBot(telepot.aio.Bot):
         if not self._ensure_params(tg_chat_id, params):
             return
 
-        if str(params[0]) not in self.admins:
-            self.admins.append(str(params[0]))
+        if str(params[0]) not in self.config['admins']:
+            self.config['admins'].append(str(params[0]))
             bot.config.force_taint()
             bot.config.save()
             text = _('User added to admins')
