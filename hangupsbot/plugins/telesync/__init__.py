@@ -196,8 +196,12 @@ def setup_memory(bot):
         'tg_data': {}
     }
 
-    # validate memory
-    _validate_dict(bot, 'memory', ['telesync'], default_memory)
+    if bot.memory.exists(['telesync']):
+        # validate memory
+        _validate_dict(bot, 'memory', ['telesync'], default_memory)
+    else:
+        bot.memory.set_by_path(['telesync'], default_memory)
+        bot.memory.save()
 
     if bot.memory.changed:
         bot.memory.save()
