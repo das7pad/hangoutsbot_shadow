@@ -1,6 +1,6 @@
 import importlib, logging, unicodedata
 
-import hangups_shim as hangups
+import hangups_shim
 
 from parsers import simple_parse_to_segments, segment_to_html
 
