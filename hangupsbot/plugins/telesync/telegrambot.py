@@ -244,19 +244,19 @@ class Received(object):
                 tg_bot.config['c_filter_received_n'],
                 tg_bot.config['track_edits']
                 )
-            changed = False
-            # use copy as the dict should not change during the iteration
+            changed = text_changed = photos_changed = False
+            # use a copy as the dict should not change during the iteration
             for tg_chat_id in bot.memory.get_by_path(
                     ['telesync', 'tg_data']
                 ).copy():
-                photos_changed = True
                 sorted_photo_data = self.get_photos(tg_chat_id)
-                # remove not needed photo_ids and their caption
-                for photo_id, message_id in sorted_photo_data[:-keep_n]:
-                    self.text[tg_chat_id].pop(message_id, None)
-                    self.photos[tg_chat_id].pop(photo_id, None)
-                else:
-                    photos_changed = False
+                photo_data_to_remove = sorted_photo_data[:-keep_n]
+                if photo_data_to_remove:
+                    photos_changed = True
+                    # remove not needed photo_ids and their caption
+                    for photo_id, message_id in photo_data_to_remove:
+                        self.text[tg_chat_id].pop(message_id, None)
+                        self.photos[tg_chat_id].pop(photo_id, None)
 
                 # create subset of (all messages) - (photo captions to keep)
                 # remove all except the last n items
@@ -264,12 +264,11 @@ class Received(object):
                     set(self.get_message_ids(tg_chat_id))
                     - set(self.get_photos(tg_chat_id, True)[-keep_n:])
                     )[:-keep_n]
-                text_changed = True
-                for message_id in messages_to_remove:
-                    self.text[tg_chat_id].pop(message_id, None)
-                else:
-                    text_changed = False
-                changed = photos_changed or text_changed or changed
+                if messages_to_remove:
+                    text_changed = True
+                    for message_id in messages_to_remove:
+                        self.text[tg_chat_id].pop(message_id, None)
+                changed = changed or photos_changed or text_changed
 
             if changed and (
                     self.tg_bot.config['store_messages'] or
