@@ -272,7 +272,7 @@ class Received(object):
                 changed = photos_changed or text_changed or changed
 
             if changed and (
-                    self.tg_bot.config['store_messages'] or \
+                    self.tg_bot.config['store_messages'] or
                     self.tg_bot.config['store_messages']
                 ):
                 bot.memory.force_taint()
@@ -298,6 +298,7 @@ class User(object):
     def __init__(self, msg, chat_action='from'):
         if chat_action not in msg:
             msg[chat_action] = self.FALLBACK
+
         self.usr_id = str(msg[chat_action]['id'])
         self.name = str(msg[chat_action]['first_name'])
         self.has_username = 'username' in msg[chat_action]
@@ -471,7 +472,7 @@ class Message(object):
             )
 
     def set_text(self):
-        """map content_type to propper message text"""
+        """map content_type to a propper message text"""
         if self.content_type == 'text':
             self.text = self.msg['text']
         elif self.content_type == 'photo':
@@ -520,7 +521,7 @@ class TelegramBot(telepot.aio.Bot):
         Message.bot = ho_bot
         User.bot = ho_bot
         try:
-            super(TelegramBot, self).__init__(self.config['api_key'])
+            super().__init__(self.config['api_key'])
         except:
             raise telepot.TelegramError(_("Couldn't initialize telesync"), 10)
         self.ho_bot = ho_bot
@@ -1032,7 +1033,6 @@ class TelegramBot(telepot.aio.Bot):
                 )
 
             photo_caption = raw_caption = msg.get_photo_caption()
-
             photo_id = msg.get_photo_id()
 
             new_text, new_photo = self.received.is_valid_update(
@@ -1040,6 +1040,7 @@ class TelegramBot(telepot.aio.Bot):
                 text=raw_caption,
                 photo_id=photo_id
                 )
+
         else:
             # no sync target set for this chat
             return
@@ -1556,14 +1557,14 @@ class TelegramBot(telepot.aio.Bot):
             html = ''
         bot_cmd = self.ho_bot.memory['bot.command_aliases'][0]
         html += _(
-            '<b>Please send me the message bellow in our private Hangout:</b>\n'
+            '<b>Please send me one of the message bellow in Hangouts:</b>\n'
             'Note: The message must start with <b>{bot_cmd}</b>, otherwise I do'
-            'not process your message as a command and ignore your message.\n'
+            ' not process your message as a command and ignore your message.\n'
             'If you copy the message below, Telegram might add <b>{name}:</b> '
             'to my message. Just delete that until the message starts with <b>'
             '{bot_cmd}</b>.\n'
             'Our private Hangout and this chat will be automatcally synced. You'
-            'can then receive mentions and other text that I only send to '
+            ' can then receive mentions and other messages I only send to '
             'private Hangouts. Use <i>split</i>  next to the token to block '
             'this sync.\n'
             'Use /unsyncprofile to cancel the process.'
@@ -1616,7 +1617,7 @@ class TelegramBot(telepot.aio.Bot):
 
         token = None
         # get unique token
-        while not token or bot.memory.exists(
+        while token is None or bot.memory.exists(
                 ['telesync', 'profilesync', 'pending_ho', token]
             ):
             token = ''.join(
