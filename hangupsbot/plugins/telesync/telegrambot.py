@@ -1262,11 +1262,10 @@ class TelegramBot(telepot.aio.Bot):
             )
 
     @asyncio.coroutine
-    def _ensure_admin(self, tg_chat_id, msg):
+    def _ensure_admin(self, msg):
         """return weather the user is admin, and respond if be_quiet is off
 
         Args:
-            tg_chat_id: int
             msg: Message instance
 
         Returns:
@@ -1275,18 +1274,17 @@ class TelegramBot(telepot.aio.Bot):
         if not msg.user.user_id in self.config['admins']:
             if not self.config['be_quiet']:
                 yield from self.sendMessage(
-                    tg_chat_id,
+                    msg.chat_id,
                     _('This command is admin-only!')
                     )
             return False
         return True
 
     @asyncio.coroutine
-    def _ensure_private(self, tg_chat_id, msg):
+    def _ensure_private(self, msg):
         """return weather the chat is private, and respond if be_quiet is off
 
         Args:
-            tg_chat_id: int
             msg: Message instance
 
         Returns:
@@ -1295,7 +1293,7 @@ class TelegramBot(telepot.aio.Bot):
         if msg.chat_type != 'private':
             if not self.config['be_quiet']:
                 yield from self.sendMessage(
-                    tg_chat_id,
+                    msg.chat_id,
                     _(
                         'Issue again in a private chat:\n'
                         'Tap on my name then hit the message icon'
@@ -1346,7 +1344,7 @@ class TelegramBot(telepot.aio.Bot):
             args: dict
         """
         msg = args['msg']
-        if self._ensure_private(tg_chat_id, msg):
+        if (yield from self._ensure_private(msg)):
             yield from self.sendMessage(
                 tg_chat_id,
                 _("Your Telegram user id is '{}'").format(msg.user.usr_id)
@@ -1363,7 +1361,7 @@ class TelegramBot(telepot.aio.Bot):
             args: dict
         """
         msg = args['msg']
-        if self._ensure_admin(tg_chat_id, msg):
+        if (yield from self._ensure_private(msg)):
             yield from self.sendMessage(
                 tg_chat_id,
                 _("This chat has the id '{}'").format(tg_chat_id)
@@ -1381,11 +1379,11 @@ class TelegramBot(telepot.aio.Bot):
         """
         bot = self.ho_bot
         msg = args['msg']
-        if not self._ensure_admin(tg_chat_id, msg):
+        if not (yield from self._ensure_admin(msg)):
             return
 
         params = args['params']
-        if not self._ensure_params(tg_chat_id, params):
+        if not (yield from self._ensure_params(tg_chat_id, params)):
             return
 
         target = str(params[0])
@@ -1425,8 +1423,8 @@ class TelegramBot(telepot.aio.Bot):
         msg = args['msg']
         # let non-admin user disable their own tg<->pHO sync
         if not (
-                self._ensure_admin(tg_chat_id, msg) or \
-                self._ensure_private(tg_chat_id, msg)
+                msg.chat_type == 'private' or
+                (yield from self._ensure_admin(msg))
             ):
             return
         if bot.memory.exists(['telesync', 'tg2ho', str(tg_chat_id)]):
@@ -1455,8 +1453,8 @@ class TelegramBot(telepot.aio.Bot):
 
         msg = args['msg']
         if not (
-                self._ensure_admin(tg_chat_id, msg) and \
-                self._ensure_private(tg_chat_id, msg)
+                (yield from self._ensure_private(msg)) and
+                (yield from self._ensure_admin(msg))
             ):
             return
 
@@ -1488,8 +1486,8 @@ class TelegramBot(telepot.aio.Bot):
 
         msg = args['msg']
         if not (
-                self._ensure_admin(tg_chat_id, msg) and \
-                self._ensure_private(tg_chat_id, msg)
+                (yield from self._ensure_private(msg)) and
+                (yield from self._ensure_admin(msg))
             ):
             return
 
@@ -1588,7 +1586,7 @@ class TelegramBot(telepot.aio.Bot):
         """
         bot = self.ho_bot
         msg = args['msg']
-        if not self._ensure_private(tg_chat_id, msg):
+        if not (yield from self._ensure_private(msg)):
             return
 
         if bot.memory.exists(
@@ -1645,7 +1643,7 @@ class TelegramBot(telepot.aio.Bot):
         """
         bot = self.ho_bot
         msg = args['msg']
-        if not self._ensure_private(tg_chat_id, msg):
+        if not (yield from self._ensure_private(msg)):
             return
 
         user_id = msg.user.usr_id
@@ -1693,7 +1691,7 @@ class TelegramBot(telepot.aio.Bot):
             args: dict
         """
         msg = args['msg']
-        if not self._ensure_admin(tg_chat_id, msg):
+        if not (yield from self._ensure_admin(msg)):
             return
 
         yield from self.sendMessage(
@@ -1716,7 +1714,7 @@ class TelegramBot(telepot.aio.Bot):
             args: dict
         """
         msg = args['msg']
-        if not self._ensure_admin(tg_chat_id, msg):
+        if not (yield from self._ensure_admin(msg)):
             return
         params = args['params']
         if not len(params):
@@ -1737,7 +1735,7 @@ class TelegramBot(telepot.aio.Bot):
             args: dict
         """
         msg = args['msg']
-        if not self._ensure_private(tg_chat_id, msg):
+        if not (yield from self._ensure_private(msg)):
             return
         admin_names = []
         bot = self.ho_bot
@@ -1782,7 +1780,7 @@ class TelegramBot(telepot.aio.Bot):
             args: dict
         """
         msg = args['msg']
-        if not self._ensure_admin(tg_chat_id, msg):
+        if not (yield from self._ensure_admin(msg)):
             return
         yield from self.sendMessage(tg_chat_id, _("I'll be back!"))
         try:
