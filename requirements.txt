@@ -2,7 +2,7 @@
 git+https://github.com/tdryer/hangups.git
 appdirs
 asyncio
-aiohttp
+aiohttp==1.3.0
 jsonrpclib-pelix
 
 # PLUGIN DEPENDENCIES #
@@ -19,6 +19,6 @@ spotipy
 slackclient >=0.16 # slackrtm (includes websockets)
 textblob
 python_dateutil # gitlab sink
-telepot # telegram sync
+telepot==10.5 # telegram sync
 cleverwrap # cleverbot
 Pillow # telegram sync
