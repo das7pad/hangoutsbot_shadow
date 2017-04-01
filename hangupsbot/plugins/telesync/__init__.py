@@ -549,9 +549,10 @@ def telesync(bot, event, *args):
 
     else:
         tg_chat_id = str(args[0])
-        if bot.memory.exists(['telesync', 'ho2tg', str(event.conv_id)]):
+        ho_chat_id = str(event.conv_id)
+        if bot.memory.exists(['telesync', 'ho2tg', ho_chat_id]):
             current_target = bot.memory.get_by_path(
-                ['telesync', 'tg2ho', str(tg_chat_id)]
+                ['telesync', 'ho2tg', ho_chat_id]
                 )
             if tg_chat_id == current_target:
                 yield from bot.coro_send_message(
@@ -563,19 +564,19 @@ def telesync(bot, event, *args):
             text = _("Sync target updated to '{}'").format(tg_chat_id)
         else:
             text = _("Sync target set to '{}'").format(tg_chat_id)
-            bot.memory.set_by_path(
-                ['telesync', 'ho2tg', str(event.conv_id)],
-                tg_chat_id
-                )
-            bot.memory.set_by_path(
-                ['telesync', 'tg2ho', tg_chat_id],
-                str(event.conv_id)
-                )
-            bot.memory.save()
-            yield from bot.coro_send_message(
-                event.conv_id,
-                text
-                )
+        bot.memory.set_by_path(
+            ['telesync', 'ho2tg', ho_chat_id],
+            tg_chat_id
+            )
+        bot.memory.set_by_path(
+            ['telesync', 'tg2ho', tg_chat_id],
+            ho_chat_id
+            )
+        bot.memory.save()
+        yield from bot.coro_send_message(
+            event.conv_id,
+            text
+            )
 
 @asyncio.coroutine
 def _on_hangouts_message(bot, event, command):
