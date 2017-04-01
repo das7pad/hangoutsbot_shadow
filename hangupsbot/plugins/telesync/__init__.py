@@ -686,9 +686,7 @@ def _on_membership_change(bot, event, command):
         fake_event = hangups_event.FakeEvent(
             bot=bot,
             conv_id=event.conv_id,
-            user_id=event.conv.get_user(
-                event.conv_event.participant_ids[0]
-                ).id_.chat_id,
+            user=event.conv.get_user(event.conv_event.participant_ids[0]),
             text=text
             )
 
