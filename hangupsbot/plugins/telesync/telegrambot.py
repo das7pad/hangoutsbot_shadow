@@ -696,7 +696,6 @@ class TelegramBot(telepot.aio.Bot):
                     tg_chat_id,
                     html
                     )
-                )
 
     @asyncio.coroutine
     def _get_ho_photo_id(self, photo_id, target):
